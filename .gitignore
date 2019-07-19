@@ -8,3 +8,7 @@
 
 # pyinstaller spec files
 /*.spec
+
+# test coverage
+/.coverage
+/htmlcov/

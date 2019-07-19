@@ -16,7 +16,7 @@ app_exe := $(app_dir)$(app_name)
 app_archive := $(dist_dir)$(app_name).tar.gz
 
 
-.PHONY: app archive clean lint
+.PHONY: app archive clean lint test
 
 $(app_exe): $(module_main_src) $(module_helpers_src)
 	@rm -rf $(app_dir)
@@ -33,8 +33,11 @@ clean:
 	@rm -rf $(build_dir)
 	@rm -rf $(dist_dir)
 	@rm -f *.spec
+	@rm -f .coverage
+	@rm -rf htmlcov/
 
 lint:
 	@pipenv run pylint $(module_dir)
 
-
+test:
+	@pipenv run mamba
