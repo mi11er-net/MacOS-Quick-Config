@@ -1,5 +1,10 @@
 #Compiled Python files
 *.pyc
 
-#Backed up Preferences Files
-*.bak
+# pyinstaller build files
+/build/
+# pyinstaller dist files
+/dist/
+
+# pyinstaller spec files
+/*.spec
