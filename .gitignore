@@ -1,14 +1,12 @@
-#Compiled Python files
+# Python
 *.pyc
+/__pycache__
 
-# pyinstaller build files
+# pyinstaller
 /build/
-# pyinstaller dist files
 /dist/
-
-# pyinstaller spec files
 /*.spec
 
-# test coverage
+# tests
 /.coverage
 /htmlcov/

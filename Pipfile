@@ -8,6 +8,7 @@ pyinstaller = "*"
 pylint = "*"
 mamba = "*"
 expects = "*"
+docopt = "*"
 
 [packages]
 
