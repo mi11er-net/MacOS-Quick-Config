@@ -7,6 +7,8 @@
 build_dir := build/
 dist_dir := dist/
 
+build_env_file := $(build_dir)pip
+
 module_name := quick_config
 module_dir := $(module_name)/
 module_main_src := $(module_dir)__main__.py
@@ -43,11 +45,16 @@ $(app_archive): $(app_exe)
 
 $(version_file): version
 
+# install dependencies into dev environment
+$(build_env_file): Pipfile Pipfile.lock
+	@pipenv install --dev
+	@touch $(build_env_file)
+
 ##
 # Phony Targets
 ##
 
-.PHONY: version app archive clean lint test
+.PHONY: version app archive clean lint test install
 
 export version_string
 version:
@@ -69,3 +76,6 @@ lint:
 
 test:
 	@pipenv run mamba
+
+#dev install
+install: $(build_env_file)
