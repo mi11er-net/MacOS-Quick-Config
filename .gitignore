@@ -10,3 +10,6 @@
 # tests
 /.coverage
 /htmlcov/
+
+# version file gets rebuilt as needed
+/quick_config/_version.py
