@@ -1,59 +1,45 @@
-"""MacOS Quick Config
-
-    Usage:
-        quick-config [options]
-
-    Options:
-        --debug-print
-
-
-
-
-        -h, --help
-
-"""
+"""MacOS Quick Config"""
 
 import click
-from docopt import docopt
-import quick_config.signal as signal
 from . import __version__
 from .helpers import *
 
 @click.command()
-@click.option('--debug-print', default=False, is_flag=True,
-              help='Enables verbose output for debugging the tool.')
-@click.option('--report-only', default=False, is_flag=True,
-              help='Only reports on compliance and does not offer to fix broken configurations.')
-@click.option('--disable-logs', default=False, is_flag=True,
-              help='Refrain from creating a log file with the results.')
-@click.option('--prompt/--no-prompt', default=False, is_flag=True,
-              help='Refrain from prompting user before applying fixes.')
-@click.option('--skip-sudo-checks', default=False, is_flag=True,
-              help='Do not perform checks that require sudo privileges.')
+@click.option('--apply/--no-apply', default=True,
+              help='Should fixes be applied. [Default: apply]')
+@click.option('--log/--no-log', default=True,
+              help='Should output be written to a log. [Default: log]')
+@click.option('--sudo/--no-sudo', 'sudo', default=True,
+              help='Should sudo checks be performed. [Default: sudo]')
+@click.option('--prompt/--no-prompt', default=True,
+              help='Should user be promted before apply every fix. [Default: prompt] ')
+@click.option('-v', '--verbose', count=True,
+              help='Enables verbose output for debugging.')
 @click.version_option()
 @click.help_option('--help', '-h')
 
-def run(debug_print, report_only, disable_logs, prompt, skip_sudo_checks):
-    """Main function."""
-    #signal.setup()
-    #arguments = docopt(__doc__, version=__version__)
-    #print(arguments)
-
-    import time
-    time.sleep(10)
+def cli(apply, log, sudo, prompt, verbose):
+    """Run checks aginst the MacOS configuration and apply fixes if necessary."""
 
     global glob_check_num, glob_fail_fix_declined, glob_pass_after_fix, \
            glob_fail_fix_fail, glob_fail_fix_skipped, glob_pass_no_fix, \
            glob_check_skipped
 
-    const.ENABLE_DEBUG_PRINT = arguments['--debug-print']
-    const.WRITE_TO_LOG_FILE = arguments['--disable-logs']
-    const.PROMPT_FOR_FIXES = not arguments['--disable-prompt']
-    const.ATTEMPT_FIXES = not arguments['--report-only']
-    const.SKIP_SUDO_TESTS = arguments['--skip-sudo-checks']
+    const.ENABLE_DEBUG_PRINT = (verbose >= 0)
+    const.WRITE_TO_LOG_FILE = log
+    const.PROMPT_FOR_FIXES = prompt
+    const.ATTEMPT_FIXES = apply
+    const.SKIP_SUDO_TESTS = not sudo
+
+    import quick_config.signal as signal
+    signal.t1()
+    signal.test='b'
+    signal.t1()
+    exit()
 
     dprint_settings()
-
+    print(const.ENABLE_DEBUG_PRINT)
+    exit()
     print_banner()
 
     config_checks = read_config(const.DEFAULT_CONFIG_FILE)

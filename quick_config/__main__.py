@@ -2,6 +2,8 @@
     Main Program Entry Point
 """
 
-import quick_config.cli as cli
+from .cli import cli
 
-cli.run()
+
+if __name__ == "__main__":
+    cli()

@@ -45,8 +45,11 @@ $(app_archive): $(app_exe)
 
 $(version_file): version
 
+$(build_dir):
+	@mkdir -p $(build_dir)
+
 # install dependencies into dev environment
-$(build_env_file): Pipfile Pipfile.lock
+$(build_env_file): Pipfile Pipfile.lock | $(build_dir)
 	@pipenv install --dev
 	@touch $(build_env_file)
 
@@ -70,6 +73,7 @@ clean:
 	@rm -f *.spec
 	@rm -f .coverage
 	@rm -rf htmlcov/
+	@rm -rf *.egg-info/
 
 lint:
 	@pipenv run pylint $(module_dir)
@@ -79,3 +83,5 @@ test:
 
 #dev install
 install: $(build_env_file)
+
+reinstall: clean install

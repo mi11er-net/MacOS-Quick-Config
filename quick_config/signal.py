@@ -5,6 +5,14 @@
 import sys
 import signal
 
+test =  'a'
+
+def t1():
+    print(test)
+
+
+
+
 def setup():
     """ Setup signal handeling """
     signal.signal(signal.SIGINT, _graceful_sig_exit)
