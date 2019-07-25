@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "cf850b03e98496c27a6e3a96fd2f117ed2376cb49ff77d4fa224ff430eca9dd5"
+            "sha256": "2472fa107ff1786325176de6b151027b95368a1bbd65cef06373088fd5b194dc"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -15,7 +15,32 @@
             }
         ]
     },
-    "default": {},
+    "default": {
+        "click": {
+            "hashes": [
+                "sha256:2335065e6395b9e67ca716de5f7526736bfa6ceead690adf616d925bdc622b13",
+                "sha256:5b94b49521f6456670fdb30cd82a4eca9412788a93fa6dd6df72c94d5a8ff2d7"
+            ],
+            "version": "==7.0"
+        },
+        "docopt": {
+            "hashes": [
+                "sha256:49b3a825280bd66b3aa83585ef59c4a8c82f2c8a522dbe754a8bc8d08c85c491"
+            ],
+            "version": "==0.6.2"
+        },
+        "e1839a8": {
+            "editable": true,
+            "path": "."
+        },
+        "pyfiglet": {
+            "hashes": [
+                "sha256:c6c2321755d09267b438ec7b936825a4910fec696292139e664ca8670e103639",
+                "sha256:d555bcea17fbeaf70eaefa48bb119352487e629c9b56f30f383e2c62dd67a01c"
+            ],
+            "version": "==0.8.post1"
+        }
+    },
     "develop": {
         "altgraph": {
             "hashes": [
@@ -36,6 +61,13 @@
                 "sha256:b65db1bbaac9f9f4d190199bb8680af6f6f84fd3769a5ea883df8a91fe68b4c4"
             ],
             "version": "==2.2.5"
+        },
+        "click": {
+            "hashes": [
+                "sha256:2335065e6395b9e67ca716de5f7526736bfa6ceead690adf616d925bdc622b13",
+                "sha256:5b94b49521f6456670fdb30cd82a4eca9412788a93fa6dd6df72c94d5a8ff2d7"
+            ],
+            "version": "==7.0"
         },
         "clint": {
             "hashes": [
@@ -83,14 +115,12 @@
             "hashes": [
                 "sha256:49b3a825280bd66b3aa83585ef59c4a8c82f2c8a522dbe754a8bc8d08c85c491"
             ],
-            "index": "pypi",
             "version": "==0.6.2"
         },
         "expects": {
             "hashes": [
                 "sha256:419902ccafe81b7e9559eeb6b7a07ef9d5c5604eddb93000f0642b3b2d594f4c"
             ],
-            "index": "pypi",
             "version": "==0.9.0"
         },
         "isort": {
@@ -134,7 +164,6 @@
             "hashes": [
                 "sha256:25328151ea94d97a0b461d7256dc7350c99b5f8d2de22d355978378edfeac545"
             ],
-            "index": "pypi",
             "version": "==0.10"
         },
         "mccabe": {
@@ -144,11 +173,17 @@
             ],
             "version": "==0.6.1"
         },
+        "pyfiglet": {
+            "hashes": [
+                "sha256:c6c2321755d09267b438ec7b936825a4910fec696292139e664ca8670e103639",
+                "sha256:d555bcea17fbeaf70eaefa48bb119352487e629c9b56f30f383e2c62dd67a01c"
+            ],
+            "version": "==0.8.post1"
+        },
         "pyinstaller": {
             "hashes": [
                 "sha256:ee7504022d1332a3324250faf2135ea56ac71fdb6309cff8cd235de26b1d0a96"
             ],
-            "index": "pypi",
             "version": "==3.5"
         },
         "pylint": {
@@ -156,8 +191,14 @@
                 "sha256:5d77031694a5fb97ea95e828c8d10fc770a1df6eb3906067aaed42201a8a6a09",
                 "sha256:723e3db49555abaf9bf79dc474c6b9e2935ad82230b10c1138a71ea41ac0fff1"
             ],
-            "index": "pypi",
             "version": "==2.3.1"
+        },
+        "quick-config": {
+            "editable": true,
+            "extras": [
+                "dev"
+            ],
+            "path": "."
         },
         "six": {
             "hashes": [

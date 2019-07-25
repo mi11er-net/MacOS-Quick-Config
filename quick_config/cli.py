@@ -4,37 +4,57 @@
         quick-config [options]
 
     Options:
-        -s TEXT, --set TEXT
-        -h --help              Show this screen.
-        --version              Show version.
+        --debug-print
+
+
+
+
+        -h, --help
 
 """
 
+import click
 from docopt import docopt
+import quick_config.signal as signal
 from . import __version__
 from .helpers import *
 
-#import quick_config.helpers as helpers
+@click.command()
+@click.option('--debug-print', default=False, is_flag=True,
+              help='Enables verbose output for debugging the tool.')
+@click.option('--report-only', default=False, is_flag=True,
+              help='Only reports on compliance and does not offer to fix broken configurations.')
+@click.option('--disable-logs', default=False, is_flag=True,
+              help='Refrain from creating a log file with the results.')
+@click.option('--prompt/--no-prompt', default=False, is_flag=True,
+              help='Refrain from prompting user before applying fixes.')
+@click.option('--skip-sudo-checks', default=False, is_flag=True,
+              help='Do not perform checks that require sudo privileges.')
+@click.version_option()
+@click.help_option('--help', '-h')
 
-def run():
+def run(debug_print, report_only, disable_logs, prompt, skip_sudo_checks):
     """Main function."""
-    arguments = docopt(__doc__, version=__version__)
+    #signal.setup()
+    #arguments = docopt(__doc__, version=__version__)
     #print(arguments)
+
+    import time
+    time.sleep(10)
 
     global glob_check_num, glob_fail_fix_declined, glob_pass_after_fix, \
            glob_fail_fix_fail, glob_fail_fix_skipped, glob_pass_no_fix, \
            glob_check_skipped
 
-    args = get_sys_args()
-    const.ENABLE_DEBUG_PRINT = args['debug-print']
-    const.WRITE_TO_LOG_FILE = args['write-to-log-file']
-    const.PROMPT_FOR_FIXES = not args['no-prompt']
-    const.ATTEMPT_FIXES = not args['report-only']
-    const.SKIP_SUDO_TESTS = args['skip-sudo-checks']
+    const.ENABLE_DEBUG_PRINT = arguments['--debug-print']
+    const.WRITE_TO_LOG_FILE = arguments['--disable-logs']
+    const.PROMPT_FOR_FIXES = not arguments['--disable-prompt']
+    const.ATTEMPT_FIXES = not arguments['--report-only']
+    const.SKIP_SUDO_TESTS = arguments['--skip-sudo-checks']
 
     dprint_settings()
 
-    _print_banner()
+    print_banner()
 
     config_checks = read_config(const.DEFAULT_CONFIG_FILE)
     completely_failed_tests = []

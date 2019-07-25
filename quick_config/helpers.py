@@ -13,29 +13,11 @@ import json
 import quick_config.const  as const #const.py
 import quick_config.prompt as prompt #prompt.py
 
-def get_args():
-    parser = argparse.ArgumentParser(description='Generate A Directory')
-    parser.add_argument('--debug-print',
-                        required=False,
-                        help='Enables verbose output for debugging the tool.')
-    return parser.parse_args()
+
+def handle_sigint(signum, fram):
+    exit()
 
 
-#def print_usage():
-#    """Prints usage for this command-line tool and exits."""
-#    print("Usage: python app.py [OPTIONS]\n"
-#          "OPTIONS:\n"
- #         "\t--debug-print        Enables verbose output for debugging the "
- #         "tool.\n"
- #         "\t--report-only        Only reports on compliance and does not "
- #         "offer to fix broken configurations.\n"
- #         "\t--disable-logs       Refrain from creating a log file with the "
- #         "results.\n"
- #         "\t--disable-prompt     Refrain from prompting user before applying "
- #         "fixes.\n"
- #         "\t--skip-sudo-checks   Do not perform checks that require sudo "
- #         "privileges.\n"
- #         "\t--help -h            Print this usage information.\n")
 
 
 const.DEFAULT_OUTPUT_LOCATION = "~/Documents/"
@@ -564,7 +546,7 @@ def is_match(regex, string, ignore_case=False):
 
     return re.match(regex, string, regex_flags) is not None
 
-def _print_banner():
+def print_banner():
     banner = (("---------------------------------------------------------------"
                "---------------------------\n"
                "%s%sosx-config-check%s %s\n"
@@ -579,23 +561,6 @@ def _print_banner():
               (const.COLORS['BOLD'], const.COLORS['OKBLUE'],
                const.COLORS['ENDC'], const.VERSION))
     write_str(_underline_hyperlink(banner))
-
-def print_usage():
-    """Prints usage for this command-line tool and exits."""
-    print("Usage: python app.py [OPTIONS]\n"
-          "OPTIONS:\n"
-          "\t--debug-print        Enables verbose output for debugging the "
-          "tool.\n"
-          "\t--report-only        Only reports on compliance and does not "
-          "offer to fix broken configurations.\n"
-          "\t--disable-logs       Refrain from creating a log file with the "
-          "results.\n"
-          "\t--disable-prompt     Refrain from prompting user before applying "
-          "fixes.\n"
-          "\t--skip-sudo-checks   Do not perform checks that require sudo "
-          "privileges.\n"
-          "\t--help -h            Print this usage information.\n")
-    sys.exit()
 
 def print_tallies():
     """Prints totals of the various possible outcomes of config checks."""
@@ -648,41 +613,3 @@ def trim_block(multiline_str):
         if line != '':
             result += "%s\n" % line
     return result.rstrip() #remove trailing newline
-
-def get_sys_args():
-    """Parses command line args, setting defaults where not specified.
-
-    Returns: dict:
-        * debug-print (bool)
-        * report-only (bool)
-        * write-to-log-file (bool)
-        * no-prompt (bool)
-        * skip-sudo-checks (bool)
-    """
-    args = {'debug-print': False,
-            'report-only': False,
-            'write-to-log-file': True,
-            'no-prompt': False,
-            'skip-sudo-checks': False}
-    unprocessed_args = sys.argv[1:]
-    while len(unprocessed_args) > 0:
-        flag = unprocessed_args.pop(0)
-        if flag == '--debug-print':
-            args['debug-print'] = True
-        elif flag == '--report-only':
-            args['report-only'] = True
-        elif flag == '--disable-logs':
-            args['write-to-log-file'] = False
-        elif flag == '--disable-prompt':
-            args['no-prompt'] = True
-        elif flag == '--skip-sudo-checks':
-            args['skip-sudo-checks'] = True
-        elif flag == '-h' or flag == '--help':
-            print_usage()
-        else:
-            print("ERROR: Unrecognized option '%s'" % flag)
-            print_usage()
-
-    return args
-
-
