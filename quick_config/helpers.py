@@ -12,12 +12,15 @@ from warnings import warn
 import json
 import quick_config.const  as const #const.py
 import quick_config.prompt as prompt #prompt.py
-
+import click
+from . import settings
 
 def handle_sigint(signum, fram):
     exit()
 
 
+def test(**kwargs):
+    print(kwargs)
 
 
 const.DEFAULT_OUTPUT_LOCATION = "~/Documents/"
@@ -263,7 +266,7 @@ def run_check(config_check, last_attempt=False, quiet_fail=False):
     for test in config_check.tests:
         #alert user if he might get prompted for admin privs due to sudo use
         if 'sudo ' in test['command']:
-            if const.SKIP_SUDO_TESTS:
+            if not settings.SUDO:
                 write_str("Skipping test because app skipping sudo tests.",
                           debug=True)
             else:
@@ -276,7 +279,7 @@ def run_check(config_check, last_attempt=False, quiet_fail=False):
                           (const.COLORS['BOLD'], const.COLORS['ENDC'],
                            fancy_sudo_command))
 
-        if 'sudo ' not in test['command'] or not const.SKIP_SUDO_TESTS:
+        if 'sudo ' not in test['command'] or settings.SUDO:
             command_pass = None
             if 'command_pass' in test:
                 command_pass = str(test['command_pass'])
@@ -495,13 +498,13 @@ def do_fix_and_test(config_check):
 
 def dprint_settings():
     """Prints current global flags when debug printing is enabled."""
-    write_str("ENABLE_DEBUG_PRINT: %s" % str(const.ENABLE_DEBUG_PRINT),
+    write_str("VERBOSITY: %s" % str(settings.VERBOSITY),
               debug=True)
-    write_str("WRITE_TO_LOG_FILE: %s" % str(const.WRITE_TO_LOG_FILE),
+    write_str("LOG: %s" % str(settings.LOG),
               debug=True)
-    write_str("PROMPT_FOR_FIXES: %s" % str(const.PROMPT_FOR_FIXES), debug=True)
-    write_str("ATTEMPT_FIXES: %s" % str(const.ATTEMPT_FIXES), debug=True)
-    write_str("SKIP_SUDO_TESTS: %s" % str(const.SKIP_SUDO_TESTS), debug=True)
+    write_str("PROMPT: %s" % str(settings.PROMPT), debug=True)
+    write_str("APPLY: %s" % str(settings.APPLY), debug=True)
+    write_str("SUDO: %s" % str(settings.SUDO), debug=True)
 
 def _underline_hyperlink(string):
     """Insert underlines into hyperlinks"""
@@ -525,17 +528,17 @@ def write_str(msg, debug=False):
     """
     if debug:
         dprint(msg)
-        if ((const.ENABLE_DEBUG_PRINT or const.LOG_DEBUG_ALWAYS) and
-                const.WRITE_TO_LOG_FILE):
+        if ((settings.VERBOSITY > 0 or const.LOG_DEBUG_ALWAYS) and
+                settings.LOG):
             log_to_file("DEBUG: %s" % msg)
     else:
         print("%s" % msg)
-        if const.WRITE_TO_LOG_FILE:
+        if settings.LOG:
             log_to_file(msg)
 
 def dprint(msg):
     """Print debug statements."""
-    if const.ENABLE_DEBUG_PRINT:
+    if settings.VERBOSITY > 0:
         print("DEBUG: %s" % msg)
 
 def is_match(regex, string, ignore_case=False):

@@ -1,44 +1,39 @@
 """MacOS Quick Config"""
 
 import click
+from . import settings
 from . import __version__
 from .helpers import *
 
 @click.command()
-@click.option('--apply/--no-apply', default=True,
+@click.option('--apply/--no-apply', default=None,
               help='Should fixes be applied. [Default: apply]')
-@click.option('--log/--no-log', default=True,
+@click.option('--log/--no-log', default=None,
               help='Should output be written to a log. [Default: log]')
-@click.option('--sudo/--no-sudo', 'sudo', default=True,
+@click.option('--sudo/--no-sudo', 'sudo', default=None,
               help='Should sudo checks be performed. [Default: sudo]')
-@click.option('--prompt/--no-prompt', default=True,
+@click.option('--prompt/--no-prompt', default=None,
               help='Should user be promted before apply every fix. [Default: prompt] ')
 @click.option('-v', '--verbose', count=True,
               help='Enables verbose output for debugging.')
 @click.version_option()
 @click.help_option('--help', '-h')
+def cli(**kwargs):
+    """
+        Run checks aginst the MacOS configuration and apply fixes if necessary.
 
-def cli(apply, log, sudo, prompt, verbose):
-    """Run checks aginst the MacOS configuration and apply fixes if necessary."""
+        Setting options on the command line will override their defaults
+        and what is set in the config file.
+    """
+
+    settings.init(**kwargs)
+
 
     global glob_check_num, glob_fail_fix_declined, glob_pass_after_fix, \
            glob_fail_fix_fail, glob_fail_fix_skipped, glob_pass_no_fix, \
            glob_check_skipped
 
-    const.ENABLE_DEBUG_PRINT = (verbose >= 0)
-    const.WRITE_TO_LOG_FILE = log
-    const.PROMPT_FOR_FIXES = prompt
-    const.ATTEMPT_FIXES = apply
-    const.SKIP_SUDO_TESTS = not sudo
-
-    import quick_config.signal as signal
-    signal.t1()
-    signal.test='b'
-    signal.t1()
-    exit()
-
     dprint_settings()
-    print(const.ENABLE_DEBUG_PRINT)
     exit()
     print_banner()
 
@@ -47,7 +42,7 @@ def cli(apply, log, sudo, prompt, verbose):
     for config_check in config_checks:
         check_result = run_check(config_check)
         if check_result in (CheckResult.explicit_fail, CheckResult.no_pass):
-            if not const.ATTEMPT_FIXES:
+            if not settings.APPLY:
                 #report-only mode
                 glob_fail_fix_skipped += 1
                 glob_check_num += 1
@@ -62,7 +57,7 @@ def cli(apply, log, sudo, prompt, verbose):
                                "specified.") % glob_check_num, debug=True)
             else:
                 #attempt fix, but prompt user first if appropriate
-                if const.PROMPT_FOR_FIXES:
+                if settings.PROMPT:
                     prompt_default = True
                     descriptor = ''
                     if config_check.confidence == Confidence.recommended:
@@ -136,7 +131,7 @@ def cli(apply, log, sudo, prompt, verbose):
     else:
         write_str("List of completely failed tests is empty.", debug=True)
 
-    if const.WRITE_TO_LOG_FILE:
+    if settings.LOG:
         print("Wrote results to %s'%s'%s. Please review the contents before "
               "submitting them to third parties, as they may contain sensitive "
               "information about your system." %
