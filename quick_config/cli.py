@@ -30,10 +30,6 @@ def cli(**kwargs):
     settings.init(**kwargs)
     helpers.print_banner()
 
-    global glob_check_num, glob_fail_fix_declined, glob_pass_after_fix, \
-           glob_fail_fix_fail, glob_fail_fix_skipped, glob_pass_no_fix, \
-           glob_check_skipped
-
     config_checks = helpers.read_config(settings.DEFAULT_CONFIG_FILE)
     completely_failed_tests = []
     for config_check in config_checks:
@@ -41,17 +37,17 @@ def cli(**kwargs):
         if check_result in (helpers.CheckResult.explicit_fail, helpers.CheckResult.no_pass):
             if not settings.APPLY:
                 #report-only mode
-                glob_fail_fix_skipped += 1
-                glob_check_num += 1
+                settings.TALLIES.fail_fix_skipped += 1
+                settings.TALLIES.check_num += 1
                 continue
 
             if config_check.fix is None and config_check.sudo_fix is None:
                 #no automatic fix available
                 if config_check.manual_fix is not None:
-                    completely_failed_tests.append(glob_check_num)
+                    completely_failed_tests.append(settings.TALLIES.check_num)
                 else:
                     helpers.write_str(("Could not satisfy test #%d but no manual fix "
-                                       "specified.") % glob_check_num, debug=True)
+                                       "specified.") % settings.TALLIES.check_num, debug=True)
             else:
                 #attempt fix, but prompt user first if appropriate
                 if settings.PROMPT:
@@ -77,40 +73,40 @@ def cli(**kwargs):
                         helpers.write_str("Value of fixed is: %s" % str(fixed),
                                           debug=True)
                         if fixed:
-                            glob_pass_after_fix += 1
+                            settings.TALLIES.pass_after_fix += 1
                         else:
-                            glob_fail_fix_fail += 1
+                            settings.TALLIES.fail_fix_fail += 1
                             if config_check.manual_fix is not None:
-                                completely_failed_tests.append(glob_check_num)
+                                completely_failed_tests.append(settings.TALLIES.check_num)
                             else:
                                 helpers.write_str(("Could not satisfy test #%d but no "
                                                    "manual fix specified.") %
-                                                  glob_check_num, debug=True)
+                                                  settings.TALLIES.check_num, debug=True)
                     else:
                         #user declined fix
-                        glob_fail_fix_declined += 1
+                        settings.TALLIES.fail_fix_declined += 1
                 else:
                     fixed = helpers.do_fix_and_test(config_check)
                     helpers.write_str("Value of fixed is: %s" % str(fixed), debug=True)
                     if fixed:
-                        glob_pass_after_fix += 1
+                        settings.TALLIES.pass_after_fix += 1
                     else:
-                        glob_fail_fix_fail += 1
+                        settings.TALLIES.fail_fix_fail += 1
                         if config_check.manual_fix is not None:
-                            completely_failed_tests.append(glob_check_num)
+                            completely_failed_tests.append(settings.TALLIES.check_num)
                         else:
                             helpers. write_str(("Could not satisfy test #%d but no "
                                                 "manual fix specified.") %
-                                               glob_check_num, debug=True)
+                                               settings.TALLIES.check_num, debug=True)
 
         elif check_result == helpers.CheckResult.explicit_pass:
-            glob_pass_no_fix += 1
+            settings.TALLIES.pass_no_fix += 1
         elif check_result == helpers.CheckResult.all_skipped:
-            glob_check_skipped += 1
+            settings.TALLIES.check_skipped += 1
 
-        glob_check_num += 1
+        settings.TALLIES.check_num += 1
 
-    helpers.print_tallies()
+    settings.TALLIES.print()
 
     if not completely_failed_tests:
         helpers.write_str("==========================")

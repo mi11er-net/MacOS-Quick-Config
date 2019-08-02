@@ -14,16 +14,6 @@ from . import __version__ as VERSION
 
 
 
-glob_check_num = 1
-
-#counters
-glob_pass_no_fix = 0
-glob_pass_after_fix = 0
-glob_fail_fix_fail = 0
-glob_fail_fix_skipped = 0
-glob_fail_fix_declined = 0
-glob_check_skipped = 0
-glob_fix_skipped_no_sudoer = 0
 
 class CheckResult(object):
     """Each test can have one of three results, informing the next step."""
@@ -171,7 +161,7 @@ def read_config(config_filename):
 
     return config_checks
 
-def run_check(config_check, last_attempt=False, quiet_fail=False):
+def run_check(config_check, last_attempt=False, quiet_fail=False, tallies=settings.TALLIES):
     """Perform the specified configuration check against the OS.
 
     Each config check may specify multiple test cases with early-succeed and/or
@@ -246,7 +236,7 @@ def run_check(config_check, last_attempt=False, quiet_fail=False):
                 raise ValueError("Invalid return value from _execute_check.")
 
     if result == CheckResult.explicit_pass or not quiet_fail:
-        write_str("\nCHECK #%d: %s... %s" % (glob_check_num,
+        write_str("\nCHECK #%d: %s... %s" % (tallies.check_num,
                                              config_check.description,
                                              check_result_to_str(result)))
 
@@ -369,7 +359,7 @@ def run_quick_command(command):
 
     return stdoutdata
 
-def _try_fix(config_check, use_sudo=False):
+def _try_fix(config_check, use_sudo=False, tallies=settings.TALLIES):
     """Attempt to fix a misconfiguration.
 
     Args:
@@ -378,7 +368,6 @@ def _try_fix(config_check, use_sudo=False):
             no sudo version of this command has been specified in the config
             file, this will simply return without executing anything.
     """
-    global glob_fix_skipped_no_sudoer
     command = config_check.sudo_fix if use_sudo else config_check.fix
     if use_sudo:
         write_str(("\tAttempting configuration fix with elevated privileges; %s"
@@ -391,7 +380,7 @@ def _try_fix(config_check, use_sudo=False):
         if use_sudo and run_quick_command("is_sudoer").strip() == "0":
             write_str(("User is not in sudoers, and therefore need not attempt "
                        "this fix: '%s'") % command)
-            glob_fix_skipped_no_sudoer += 1
+            tallies.fix_skipped_no_sudoer += 1
             return
 
         command = "source %s ; %s" % (settings.API_FILENAME, command)
@@ -497,55 +486,3 @@ def print_banner():
               (settings.COLORS['BOLD'], settings.COLORS['OKBLUE'],
                settings.COLORS['ENDC'], VERSION))
     write_str(underline_hyperlink(banner))
-
-def print_tallies():
-    """Prints totals of the various possible outcomes of config checks."""
-    total_checks = glob_check_num - 1
-    total_passed = glob_pass_no_fix + glob_pass_after_fix
-    total_failed = (glob_fail_fix_fail + glob_fail_fix_skipped +
-                    glob_fail_fix_declined + glob_check_skipped)
-
-    out = trim_block('''
-    Configurations passed total:                          %s
-    Configurations failed or skipped total:               %s
-    Configurations passed without applying fix:           %s
-    Configurations passed after applying fix:             %s
-    Configurations failed and fix failed:                 %s
-    Configurations failed and fix skipped:                %s
-    Configurations failed and fix declined:               %s
-    Configurations failed and fix failed for non-sudoer:  %s
-    Configuration checks skipped:                         %s
-    ''' % (_number_and_pct(total_passed, total_checks, 'pass'),
-           _number_and_pct(total_failed, total_checks, 'fail'),
-           _number_and_pct(glob_pass_no_fix, total_checks, 'pass'),
-           _number_and_pct(glob_pass_after_fix, total_checks, 'pass'),
-           _number_and_pct(glob_fail_fix_fail, total_checks, 'fail'),
-           _number_and_pct(glob_fail_fix_skipped, total_checks, 'fail'),
-           _number_and_pct(glob_fail_fix_declined, total_checks, 'fail'),
-           _number_and_pct(glob_fix_skipped_no_sudoer, total_checks, 'fail'),
-           _number_and_pct(glob_check_skipped, total_checks, 'skip')))
-
-    write_str(out)
-
-def _number_and_pct(num, total, result):
-    assert result in ('pass', 'fail', 'skip')
-    if result == 'pass':
-        color = settings.COLORS['OKGREEN']
-    elif result == 'fail':
-        color = settings.COLORS['FAIL']
-    elif result == 'skip':
-        color = settings.COLORS['OKBLUE']
-    end_color = '' if color == '' else settings.COLORS['ENDC']
-    return "%s%d (%s)%s" % (color, num, _pct(num, total), end_color)
-
-def _pct(num, total):
-    return "{0:.2f}".format(100.0 * num / total) + '%'
-
-def trim_block(multiline_str):
-    """Remove empty lines and leading whitespace"""
-    result = ""
-    for line in multiline_str.split("\n"):
-        line = line.lstrip()
-        if line != '':
-            result += "%s\n" % line
-    return result.rstrip() #remove trailing newline

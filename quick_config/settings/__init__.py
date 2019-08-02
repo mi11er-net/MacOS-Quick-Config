@@ -1,6 +1,7 @@
 ''' Settings Module Init '''
 from ._settings import init
 from ._settings import get_timestamp
+from ._settings import Tallies
 
 DEFAULT_OUTPUT_LOCATION = "~/Documents/"
 DEFAULT_CONFIG_FILE = "osx-config.json"
@@ -45,6 +46,9 @@ LOG_FILE_NAME = 'osx-config-check_%s.log' % get_timestamp()
 del get_timestamp
 
 LOG_FILE_LOC = DEFAULT_OUTPUT_LOCATION + LOG_FILE_NAME
+
+TALLIES = Tallies()
+del Tallies
 
 
 # cli options
