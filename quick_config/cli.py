@@ -6,7 +6,7 @@ from . import __version__
 from . import helpers
 from . import prompt
 
-@click.command()
+@click.group()
 @click.option('--apply/--no-apply', default=None,
               help='Should fixes be applied. [Default: apply]')
 @click.option('--log/--no-log', default=None,
@@ -33,7 +33,7 @@ def cli(**kwargs):
     config_checks = helpers.read_config(settings.DEFAULT_CONFIG_FILE)
     completely_failed_tests = []
     for config_check in config_checks:
-        check_result = helpers.run_check(config_check)
+        check_result = helpers.run_check(settings.TALLIES, config_check)
         if check_result in (helpers.CheckResult.explicit_fail, helpers.CheckResult.no_pass):
             if not settings.APPLY:
                 #report-only mode
@@ -69,7 +69,7 @@ def cli(**kwargs):
                                 (descriptor, next_fix_command))
                     if prompt.query_yes_no(question=question,
                                            default=helpers.bool_to_yes_no(prompt_default)):
-                        fixed = helpers.do_fix_and_test(config_check)
+                        fixed = helpers.do_fix_and_test(settings.TALLIES, config_check)
                         helpers.write_str("Value of fixed is: %s" % str(fixed),
                                           debug=True)
                         if fixed:
@@ -86,7 +86,7 @@ def cli(**kwargs):
                         #user declined fix
                         settings.TALLIES.fail_fix_declined += 1
                 else:
-                    fixed = helpers.do_fix_and_test(config_check)
+                    fixed = helpers.do_fix_and_test(settings.TALLIES, config_check)
                     helpers.write_str("Value of fixed is: %s" % str(fixed), debug=True)
                     if fixed:
                         settings.TALLIES.pass_after_fix += 1
@@ -130,6 +130,9 @@ def cli(**kwargs):
               "information about your system." %
               (settings.COLORS['BOLD'], settings.LOG_FILE_LOC, settings.COLORS['ENDC']))
 
+#@cli.command('show-config')
+#def show_config:
+#    pass
 
 if __name__ == "__main__":
     cli()

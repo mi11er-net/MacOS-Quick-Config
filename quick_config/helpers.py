@@ -73,7 +73,7 @@ class ConfigCheck(object):
                 manually remediate if a config cannot be fixed automatically.
         """
         assert isinstance(tests, list)
-        assert not tests
+        assert tests is not False
         for test in tests:
             assert isinstance(test, dict), "%s" % str(test)
             assert test['type'] in ('exact match', 'regex match')
@@ -161,7 +161,7 @@ def read_config(config_filename):
 
     return config_checks
 
-def run_check(config_check, last_attempt=False, quiet_fail=False, tallies=settings.TALLIES):
+def run_check(tallies, config_check, last_attempt=False, quiet_fail=False):
     """Perform the specified configuration check against the OS.
 
     Each config check may specify multiple test cases with early-succeed and/or
@@ -359,7 +359,7 @@ def run_quick_command(command):
 
     return stdoutdata
 
-def _try_fix(config_check, use_sudo=False, tallies=settings.TALLIES):
+def _try_fix(tallies, config_check, use_sudo=False):
     """Attempt to fix a misconfiguration.
 
     Args:
@@ -391,7 +391,7 @@ def _try_fix(config_check, use_sudo=False, tallies=settings.TALLIES):
         write_str("Command STDOUT: '%s'" % str(stdoutdata), debug=True)
         write_str("Command STDERR: '%s'" % str(stderrdata), debug=True)
 
-def do_fix_and_test(config_check):
+def do_fix_and_test(tallies, config_check):
     """Attempt to fix misconfiguration, returning the result.
 
     If a non-sudo fix is specified, this will be attempted first.
@@ -410,15 +410,17 @@ def do_fix_and_test(config_check):
     write_str("Entered do_fix_and_test()", debug=True)
 
     if config_check.fix is not None:
-        _try_fix(config_check, use_sudo=False)
+        _try_fix(tallies, config_check, use_sudo=False)
         check_result = run_check(
+            tallies,
             config_check, last_attempt=False, quiet_fail=True)
         if check_result == CheckResult.explicit_pass:
             return True
 
     if config_check.sudo_fix is not None:
-        _try_fix(config_check, use_sudo=True)
+        _try_fix(tallies, config_check, use_sudo=True)
         check_result = run_check(
+            tallies,
             config_check, last_attempt=True, quiet_fail=False)
         return bool(check_result == CheckResult.explicit_pass)
     else:

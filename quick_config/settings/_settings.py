@@ -33,7 +33,7 @@ class Tallies:
     check_num = 1
 
     #counters
-    pass_no_fix = 0,
+    pass_no_fix = 0
     pass_after_fix = 0
     fail_fix_fail = 0
     fail_fix_skipped = 0
