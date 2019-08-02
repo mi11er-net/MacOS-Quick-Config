@@ -1,0 +1,14 @@
+Command Line Flags
+  - settings.WARN_FOR_RECOMMENDED
+  - settings.WARN_FOR_EXPERIMENTAL
+  - settings.FIX_RECOMMENDED_BY_DEFAULT
+  - settings.FIX_EXPERIMENTAL_BY_DEFAULT
+  - settings.LOG_DEBUG_ALWAYS
+
+Files, add ablity for addtional locations
+  - settings.DEFAULT_OUTPUT_LOCATION
+  - settings.DEFAULT_CONFIG_FILE
+
+Remove Globals
+
+Use Click prompts instead of custom prompt module

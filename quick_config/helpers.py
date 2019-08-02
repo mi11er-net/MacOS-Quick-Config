@@ -1,79 +1,18 @@
 #!/usr/bin/env python
 """Checks the configuration of various osx options."""
 
-import argparse
-import sys
-import time
-import datetime
+
+
 from os.path import expanduser
 import re
+import time
 from subprocess import Popen, PIPE, STDOUT
 from warnings import warn
 import json
-import quick_config.const  as const #const.py
-import quick_config.prompt as prompt #prompt.py
-import click
 from . import settings
-
-def handle_sigint(signum, fram):
-    exit()
+from . import __version__ as VERSION
 
 
-def test(**kwargs):
-    print(kwargs)
-
-
-const.DEFAULT_OUTPUT_LOCATION = "~/Documents/"
-const.DEFAULT_CONFIG_FILE = "osx-config.json"
-const.WARN_FOR_RECOMMENDED = True #TODO: command line flag
-const.WARN_FOR_EXPERIMENTAL = True #TODO: command line flag
-const.FIX_RECOMMENDED_BY_DEFAULT = True #TODO: command line flag
-const.FIX_EXPERIMENTAL_BY_DEFAULT = False #TODO: command line flag
-const.LOG_DEBUG_ALWAYS = True #TODO: command line flag
-
-const.VERSION = "v1.2.0 (charmeleon)"
-
-const.API_FILENAME = './scripts/api.sh'
-
-const.COLORS = {
-    'HEADER': '\033[95m',
-    'OKBLUE': '\033[94m',
-    'OKGREEN': '\033[92m',
-    'WARNING': '\033[93m',
-    'RED': '\033[91m',
-    'FAIL': '\033[91m',
-    'ENDC': '\033[0m',
-    'BOLD': '\033[1m',
-    'UNDERLINE': '\033[4m'
-}
-
-const.PASSED_STR = const.COLORS['OKGREEN'] + "PASSED!" + const.COLORS['ENDC']
-const.FAILED_STR = const.COLORS['FAIL'] + "FAILED!" + const.COLORS['ENDC']
-const.SKIPPED_STR = const.COLORS['OKBLUE'] + "SKIPPED!" + const.COLORS['ENDC']
-const.NO_SUDO_STR = ("%s%s%s" %
-                     (const.COLORS['WARNING'],
-                      ("Insufficient privileges to perform this check. "
-                       "Skipping."),
-                      const.COLORS['ENDC']))
-const.RECOMMENDED_STR = ("%s%s%s" % (const.COLORS['BOLD'],
-                                     'RECOMMENDED',
-                                     const.COLORS['ENDC']))
-const.EXPERIMENTAL_STR = ("%s%s%s" % (const.COLORS['BOLD'],
-                                      'EXPERIMENTAL',
-                                      const.COLORS['ENDC']))
-
-const.SUDO_STR = ("%s%ssudo%s" %
-                  (const.COLORS['BOLD'], const.COLORS['RED'],
-                   const.COLORS['ENDC']))
-
-def get_timestamp():
-    """Genereate a current timestamp that won't break a filename."""
-    timestamp_format = '%Y-%m-%d_%H-%M-%S'
-    timestamp = datetime.datetime.fromtimestamp(time.time()).strftime(timestamp_format)
-    return timestamp
-
-const.LOG_FILE_NAME = 'osx-config-check_%s.log' % get_timestamp()
-const.LOG_FILE_LOC = const.DEFAULT_OUTPUT_LOCATION + const.LOG_FILE_NAME
 
 glob_check_num = 1
 
@@ -96,13 +35,13 @@ class CheckResult(object):
 def check_result_to_str(val):
     """Convert enum to string representation"""
     if val == CheckResult.explicit_pass:
-        return const.PASSED_STR
+        return settings.PASSED_STR
     elif val == CheckResult.explicit_fail:
-        return const.FAILED_STR
+        return settings.FAILED_STR
     elif val == CheckResult.no_pass:
-        return const.FAILED_STR
+        return settings.FAILED_STR
     elif val == CheckResult.all_skipped:
-        return const.SKIPPED_STR
+        return settings.SKIPPED_STR
     else:
         raise ValueError
 
@@ -144,7 +83,7 @@ class ConfigCheck(object):
                 manually remediate if a config cannot be fixed automatically.
         """
         assert isinstance(tests, list)
-        assert len(tests) > 0
+        assert not tests
         for test in tests:
             assert isinstance(test, dict), "%s" % str(test)
             assert test['type'] in ('exact match', 'regex match')
@@ -176,7 +115,7 @@ class ConfigCheck(object):
 
 def get_output_filename():
     """Get the filename of the file to write results to."""
-    return (const.DEFAULT_OUTPUT_LOCATION + "config-check_" +
+    return (settings.DEFAULT_OUTPUT_LOCATION + "config-check_" +
             time.strftime("%Y%m%d%H%M%S") + ".txt")
 
 def read_config(config_filename):
@@ -271,12 +210,12 @@ def run_check(config_check, last_attempt=False, quiet_fail=False):
                           debug=True)
             else:
                 fancy_sudo_command = re.sub(
-                    "sudo", const.SUDO_STR, test['command'])
+                    "sudo", settings.SUDO_STR, test['command'])
                 write_str(("The next configuration check requires elevated "
                            "privileges; %syou may be prompted for your current "
                            "OS X user's password  below%s. The command to be "
                            "executed is: '%s'") %
-                          (const.COLORS['BOLD'], const.COLORS['ENDC'],
+                          (settings.COLORS['BOLD'], settings.COLORS['ENDC'],
                            fancy_sudo_command))
 
         if 'sudo ' not in test['command'] or settings.SUDO:
@@ -313,7 +252,7 @@ def run_check(config_check, last_attempt=False, quiet_fail=False):
 
     if (result not in (CheckResult.explicit_pass, CheckResult.all_skipped) and
             last_attempt and do_warn(config_check)):
-        warn("Attempted fix %s" % const.FAILED_STR)
+        warn("Attempted fix %s" % settings.FAILED_STR)
 
     return result
 
@@ -324,7 +263,7 @@ def log_to_file(string):
     writing.
     """
     string = re.sub(r"\033\[\d{1,2}m", "", string)
-    log_file_loc = const.LOG_FILE_LOC
+    log_file_loc = settings.LOG_FILE_LOC
     if log_file_loc.startswith('~'):
         log_file_loc = expanduser(log_file_loc)
     with open(log_file_loc, 'a+') as log_file:
@@ -362,7 +301,7 @@ def _execute_check(command, comparison_type, case_sensitive, command_pass=None,
         ValueError if `comparison_type` is not an expected value
     """
     #http://stackoverflow.com/questions/7129107/python-how-to-suppress-the-output-of-os-system
-    command = "source %s ; %s" % (const.API_FILENAME, command)
+    command = "source %s ; %s" % (settings.API_FILENAME, command)
     process = Popen(command, stdout=PIPE, stderr=STDOUT, shell=True)
     stdout, _ = process.communicate()
 
@@ -411,16 +350,16 @@ def do_warn(config_check):
     if config_check.confidence == Confidence.required:
         return True
     if (config_check.confidence == Confidence.recommended and
-            const.WARN_FOR_RECOMMENDED):
+            settings.WARN_FOR_RECOMMENDED):
         return True
     if (config_check.confidence == Confidence.experimental and
-            const.WARN_FOR_EXPERIMENTAL):
+            settings.WARN_FOR_EXPERIMENTAL):
         return True
     return False
 
 def run_quick_command(command):
     """Runs a quick shell command and returns stdout."""
-    command = "source %s ; %s" % (const.API_FILENAME, command)
+    command = "source %s ; %s" % (settings.API_FILENAME, command)
     process = Popen(command, stdout=PIPE, stderr=STDOUT, shell=True)
     stdoutdata, stderrdata = process.communicate()
 
@@ -444,7 +383,7 @@ def _try_fix(config_check, use_sudo=False):
     if use_sudo:
         write_str(("\tAttempting configuration fix with elevated privileges; %s"
                    "you may be prompted for your OS X login password%s...") %
-                  (const.COLORS['BOLD'], const.COLORS['ENDC']))
+                  (settings.COLORS['BOLD'], settings.COLORS['ENDC']))
     stdoutdata = ""
     stderrdata = ""
     if command is not None:
@@ -455,7 +394,7 @@ def _try_fix(config_check, use_sudo=False):
             glob_fix_skipped_no_sudoer += 1
             return
 
-        command = "source %s ; %s" % (const.API_FILENAME, command)
+        command = "source %s ; %s" % (settings.API_FILENAME, command)
         process = Popen(command, stdout=PIPE, stderr=STDOUT, shell=True)
         stdoutdata, stderrdata = process.communicate()
 
@@ -496,25 +435,18 @@ def do_fix_and_test(config_check):
     else:
         return False
 
-def dprint_settings():
-    """Prints current global flags when debug printing is enabled."""
-    write_str("VERBOSITY: %s" % str(settings.VERBOSITY),
-              debug=True)
-    write_str("LOG: %s" % str(settings.LOG),
-              debug=True)
-    write_str("PROMPT: %s" % str(settings.PROMPT), debug=True)
-    write_str("APPLY: %s" % str(settings.APPLY), debug=True)
-    write_str("SUDO: %s" % str(settings.SUDO), debug=True)
 
-def _underline_hyperlink(string):
+
+def underline_hyperlink(string):
     """Insert underlines into hyperlinks"""
     return re.sub(
         r"(https?://[^ ]+)",
-        (r"%s\1%s" % (const.COLORS['UNDERLINE'], const.COLORS['ENDC'])),
+        (r"%s\1%s" % (settings.COLORS['UNDERLINE'], settings.COLORS['ENDC'])),
         string,
         flags=re.IGNORECASE)
 
-def _bool_to_yes_no(boolean):
+def bool_to_yes_no(boolean):
+    ''' Convert boolean to yes or no '''
     return 'yes' if boolean else 'no'
 
 
@@ -528,7 +460,7 @@ def write_str(msg, debug=False):
     """
     if debug:
         dprint(msg)
-        if ((settings.VERBOSITY > 0 or const.LOG_DEBUG_ALWAYS) and
+        if ((settings.VERBOSITY > 0 or settings.LOG_DEBUG_ALWAYS) and
                 settings.LOG):
             log_to_file("DEBUG: %s" % msg)
     else:
@@ -550,6 +482,7 @@ def is_match(regex, string, ignore_case=False):
     return re.match(regex, string, regex_flags) is not None
 
 def print_banner():
+    ''' Print Banner '''
     banner = (("---------------------------------------------------------------"
                "---------------------------\n"
                "%s%sosx-config-check%s %s\n"
@@ -561,9 +494,9 @@ def print_banner():
                "\t* Twitter: https://twitter.com/kristovatlas \n"
                "---------------------------------------------------------------"
                "---------------------------\n") %
-              (const.COLORS['BOLD'], const.COLORS['OKBLUE'],
-               const.COLORS['ENDC'], const.VERSION))
-    write_str(_underline_hyperlink(banner))
+              (settings.COLORS['BOLD'], settings.COLORS['OKBLUE'],
+               settings.COLORS['ENDC'], VERSION))
+    write_str(underline_hyperlink(banner))
 
 def print_tallies():
     """Prints totals of the various possible outcomes of config checks."""
@@ -597,12 +530,12 @@ def print_tallies():
 def _number_and_pct(num, total, result):
     assert result in ('pass', 'fail', 'skip')
     if result == 'pass':
-        color = const.COLORS['OKGREEN']
+        color = settings.COLORS['OKGREEN']
     elif result == 'fail':
-        color = const.COLORS['FAIL']
+        color = settings.COLORS['FAIL']
     elif result == 'skip':
-        color = const.COLORS['OKBLUE']
-    end_color = '' if color == '' else const.COLORS['ENDC']
+        color = settings.COLORS['OKBLUE']
+    end_color = '' if color == '' else settings.COLORS['ENDC']
     return "%s%d (%s)%s" % (color, num, _pct(num, total), end_color)
 
 def _pct(num, total):

@@ -6,7 +6,7 @@ http://stackoverflow.com/questions/3041986/python-command-line-yes-no-input
 import sys
 
 try:
-    input = raw_input
+    input = raw_input # pylint: disable=redefined-builtin,invalid-name
 except NameError:
     # In Python 2 there is raw_input() that takes a string from stdin and
     # input() that takes a string from stdin and evaluates it. That last
