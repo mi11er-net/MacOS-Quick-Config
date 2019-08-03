@@ -1,17 +1,54 @@
 ''' Settings module '''
+from pathlib import Path
 import datetime
 import time
+from click import get_app_dir
 import quick_config.settings as settings
 from quick_config.helpers import write_str
 
 def init(**kwargs):
     ''' Read config file and intialize all settings '''
-    settings.VERBOSITY = kwargs['verbose'] if kwargs['verbose'] is not None else settings.VERBOSITY
-    settings.LOG = kwargs['log'] if kwargs['log'] is not None else settings.LOG
-    settings.APPLY = kwargs['apply'] if kwargs['apply'] is not None else settings.APPLY
-    settings.PROMPT = kwargs['prompt'] if kwargs['prompt'] is not None else settings.PROMPT
+    if kwargs['app_directory'] is not None:
+        settings.APP_DIRECTORY = Path(kwargs['app_directory'])
+    else:
+        settings.APP_DIRECTORY = Path(get_app_dir(settings.APP_NAME))
+
+    if kwargs['config_file'] is not None:
+        settings.CONFIG_FILE = Path(kwargs['config_file'])
+    else:
+        hjson_file = settings.APP_DIRECTORY / "config.hjson"
+        json_file = settings.APP_DIRECTORY / "config.json"
+        yml_file = settings.APP_DIRECTORY / "config.yml"
+        if yml_file.exists():
+            settings.CONFIG_FILE = yml_file
+        elif hjson_file.exists():
+            settings.CONFIG_FILE = hjson_file
+        elif json_file.exists():
+            settings.CONFIG_FILE = json_file
+        else:
+            raise Exception('Cannot find config file: {}')
+
+    if kwargs['log'] is not None:
+        settings.LOG = kwargs['log']
+    else:
+        settings.LOG = True
+
+    if settings.LOG:
+        if kwargs['log_file'] is not None:
+            settings.LOG_FILE = Path(kwargs['log_file'])
+        else:
+            timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H-%M-%S')
+            file_name = 'quick_config_%s.log' % timestamp
+            settings.LOG_FILE = settings.APP_DIRECTORY / file_name
+
+    if kwargs['verbose'] is not None:
+        settings.VERBOSITY = kwargs['verbose']
+    else:
+        settings.VERBOSITY = 0
+
     settings.SUDO = kwargs['sudo'] if kwargs['sudo'] is not None else settings.SUDO
     _debug()
+
 
 def _debug():
     """Prints current global flags when debug printing is enabled."""
@@ -23,11 +60,6 @@ def _debug():
     write_str("APPLY: %s" % str(settings.APPLY), debug=True)
     write_str("SUDO: %s" % str(settings.SUDO), debug=True)
 
-def get_timestamp():
-    """Genereate a current timestamp that won't break a filename."""
-    timestamp_format = '%Y-%m-%d_%H-%M-%S'
-    timestamp = datetime.datetime.fromtimestamp(time.time()).strftime(timestamp_format)
-    return timestamp
 class Tallies:
     ''' Manage Tallies '''
     check_num = 1
@@ -92,3 +124,4 @@ def _trim_block(multiline_str):
 
 def _pct(num, total):
     return "{0:.2f}".format(100.0 * num / total) + '%'
+

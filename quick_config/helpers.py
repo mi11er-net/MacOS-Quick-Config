@@ -103,63 +103,6 @@ class ConfigCheck(object):
     def __repr__(self):
         return self.__str__()
 
-def get_output_filename():
-    """Get the filename of the file to write results to."""
-    return (settings.DEFAULT_OUTPUT_LOCATION + "config-check_" +
-            time.strftime("%Y%m%d%H%M%S") + ".txt")
-
-def read_config(config_filename):
-    """Read the expected system configuration from the config file."""
-
-    config = None
-    with open(config_filename, 'r') as config_file:
-        config = json.loads(config_file.read())
-
-    config_checks = []
-
-    for config_check in config:
-        if '_comment' in config_check:
-            continue
-
-        #Config MUST specify a description of the check
-        description = config_check['description']
-        write_str("Description: %s" % description, debug=True)
-
-        #Config MUST indicate the confidence of the configuration check
-        confidence = config_check['confidence']
-
-        #Config MUST include at least one test obj
-        tests = config_check['tests']
-
-        #Config MUST specify a fix object
-        assert 'fix' in config_check
-        assert isinstance(config_check['fix'], dict)
-
-        #Fix object must specify at least one of these:
-        #command, sudo_command, manual
-        assert ('command' in config_check['fix'] or
-                'sudo_command' in config_check['fix'] or
-                'manual' in config_check['fix'])
-        fix = None
-        sudo_fix = None
-        manual_fix = None
-        if 'command' in config_check['fix']:
-            fix = config_check['fix']['command']
-        if 'sudo_command' in config_check['fix']:
-            sudo_fix = config_check['fix']['sudo_command']
-        if 'manual' in config_check['fix']:
-            manual_fix = config_check['fix']['manual']
-
-        config_check_obj = ConfigCheck(
-            tests=tests,
-            description=description,
-            confidence=confidence,
-            fix=fix,
-            sudo_fix=sudo_fix,
-            manual_fix=manual_fix)
-        config_checks.append(config_check_obj)
-
-    return config_checks
 
 def run_check(tallies, config_check, last_attempt=False, quiet_fail=False):
     """Perform the specified configuration check against the OS.
@@ -253,7 +196,7 @@ def log_to_file(string):
     writing.
     """
     string = re.sub(r"\033\[\d{1,2}m", "", string)
-    log_file_loc = settings.LOG_FILE_LOC
+    log_file_loc = settings.LOG_FILE
     if log_file_loc.startswith('~'):
         log_file_loc = expanduser(log_file_loc)
     with open(log_file_loc, 'a+') as log_file:

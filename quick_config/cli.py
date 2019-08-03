@@ -7,14 +7,28 @@ from . import helpers
 from . import prompt
 
 @click.group()
-@click.option('--apply/--no-apply', default=None,
-              help='Should fixes be applied. [Default: apply]')
+@click.option(
+    '--app-directory',
+    'app_directory',
+    type=click.Path(exists=True),
+    envvar='QC_APP_DIRECTORY',
+    help='The directory where the config file should be read from and logs written to.')
+@click.option(
+    '--config',
+    'config_file',
+    type=click.Path(exists=True),
+    envvar='QC_CONFIG',
+    help='The config file where all settings and all config checks and fixes are defined.')
+@click.option(
+    '--log-file',
+    'log_file',
+    type=click.Path(exists=True),
+    envvar='QC_LOG_FILE',
+    help='Where the log should be written.')
 @click.option('--log/--no-log', default=None,
               help='Should output be written to a log. [Default: log]')
 @click.option('--sudo/--no-sudo', 'sudo', default=None,
               help='Should sudo checks be performed. [Default: sudo]')
-@click.option('--prompt/--no-prompt', default=None,
-              help='Should user be promted before apply every fix. [Default: prompt] ')
 @click.option('-v', '--verbose', count=True,
               help='Enables verbose output for debugging.')
 @click.version_option()
@@ -26,11 +40,29 @@ def cli(**kwargs):
         Setting options on the command line will override their defaults
         and what is set in the config file.
     """
-
+    click.echo(click.format_filename(kwargs['app_directory']))
+    exit()
     settings.init(**kwargs)
+
+@cli.command('show-config')
+def show_config():
+    ''' Show the current Configuration '''
+
+@cli.command()
+def check():
+    ''' Run the checks and print the results '''
+
+@click.option('--prompt/--no-prompt', default=None,
+              help='Should user be promted before apply every fix. [Default: prompt] ')
+@cli.command()
+def fix(**kwargs):
+    ''' Run the checks, attempt to fix, then print the results '''
+    settings.PROMPT = kwargs['prompt'] if kwargs['prompt'] is not None else settings.PROMPT
+    settings.APPLY = True
+
     helpers.print_banner()
 
-    config_checks = helpers.read_config(settings.DEFAULT_CONFIG_FILE)
+    config_checks = helpers.read_config(settings.CONFIG_FILE)
     completely_failed_tests = []
     for config_check in config_checks:
         check_result = helpers.run_check(settings.TALLIES, config_check)
@@ -128,11 +160,9 @@ def cli(**kwargs):
         print("Wrote results to %s'%s'%s. Please review the contents before "
               "submitting them to third parties, as they may contain sensitive "
               "information about your system." %
-              (settings.COLORS['BOLD'], settings.LOG_FILE_LOC, settings.COLORS['ENDC']))
+              (settings.COLORS['BOLD'], settings.LOG_FILE, settings.COLORS['ENDC']))
 
-#@cli.command('show-config')
-#def show_config:
-#    pass
+
 
 if __name__ == "__main__":
     cli()

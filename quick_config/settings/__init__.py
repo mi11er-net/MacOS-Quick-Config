@@ -1,10 +1,19 @@
 ''' Settings Module Init '''
-from ._settings import init
-from ._settings import get_timestamp
-from ._settings import Tallies
 
-DEFAULT_OUTPUT_LOCATION = "~/Documents/"
-DEFAULT_CONFIG_FILE = "osx-config.json"
+from ._settings import init
+from ._settings import Tallies
+from .. import APP_NAME
+
+##
+# These can be set from the CLI and
+# all need to be initated
+##
+APP_DIRECTORY = None
+CONFIG_FILE = None
+LOG = None
+LOG_FILE = None
+VERBOSITY = None
+
 WARN_FOR_RECOMMENDED = True
 WARN_FOR_EXPERIMENTAL = True
 FIX_RECOMMENDED_BY_DEFAULT = True
@@ -42,18 +51,12 @@ SUDO_STR = ("%s%ssudo%s" %
             (COLORS['BOLD'], COLORS['RED'],
              COLORS['ENDC']))
 
-LOG_FILE_NAME = 'osx-config-check_%s.log' % get_timestamp()
-del get_timestamp
-
-LOG_FILE_LOC = DEFAULT_OUTPUT_LOCATION + LOG_FILE_NAME
 
 TALLIES = Tallies()
 del Tallies
 
 
 # cli options
-VERBOSITY = 0
-LOG = True
 PROMPT = True
 APPLY = True
 SUDO = True
